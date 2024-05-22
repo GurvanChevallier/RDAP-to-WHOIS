@@ -1,5 +1,4 @@
 from pprint import pprint
-from unittest import case
 
 import requests
 import csv
