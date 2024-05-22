@@ -177,10 +177,69 @@ def entity_print(role, entity):
                 # The type of the telephone is not supported here, but can be implemented
                 print(role + " Phone: " + elem[3][4:])
             case "email":
-                print("Email available, not implemented yet")
+                print(role + " email: " + elem[3])
                 continue
             case _:
                 print("ERROR: unrecognized vCard object "+ elem[0])
+                continue
+
+def extract_info_from_vcard(vcard): #This extration is reducing the number of fields to only the ones that are expressed, saving potentially a lot of "" elements, in "n" or "adr" fields for an example.
+    infos = {}
+    for elem in vcard:
+        match elem[0]:
+            case "version":
+                infos["version"] = elem[3]
+            case "fn": # 6.2.1
+                infos["fn"] = elem[3]
+            case "n": # 6.2.2
+                for i in range(0, 3):
+                    if elem[3][i] != "":
+                        match i:
+                            case 0:
+                                infos["n"]["familyNames"] = elem[3][i]
+                            case 1:
+                                infos["n"]["givenNames"] = elem[3][i]
+                            case 2:
+                                infos["n"]["additionalNames"] = elem[3][i]
+                            case 3:
+                                infos["n"]["honorificPrefixes"] = elem[3][i]
+                            case 4:
+                                infos["n"]["honorificSuffixes"] = elem[3][i]
+            case "nickname":  # TODO: need to understand more what is going on with the "text-list" and the "list-component 4(";" list-component)" of the "n" values
+                infos["nickname"] = {"type": elem[1], "nickname":elem[3]}
+            case "org":
+                if elem[1].get("type") is not None:
+                    infos["org"] = {"type": elem[3], "":""}
+            case "adr":
+                for i in range(0, 7):
+                    if elem[3][i] != "":
+                        match i:  # I followed the indications of the RFC6350 for the ADR field : https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
+                            case 0:
+                                print(role + " PO box number: " + elem[3][i])
+                            case 1:
+                                print(role + " Apartment Number: " + elem[3][i])
+                            case 2:
+                                for line in elem[3][i]:  # we can have multiple lines for the same entry, should do it for all possible entries
+                                    print(role + " Street: " + line)
+                            case 3:
+                                print(role + " City: " + elem[3][i])
+                            case 4:
+                                print(role + " State/Province: " + elem[3][i])
+                            case 5:
+                                print(role + " Postal Code: " + elem[3][i])
+                            case 6:
+                                print(role + " Country: " + elem[3][i])
+                            case _:
+                                break
+            case "tel":
+                # This part is partially following the direction of the RFC6350 on the field TEL: https://datatracker.ietf.org/doc/html/rfc6350#section-6.4.1
+                # The type of the telephone is not supported here, but can be implemented
+                print(role + " Phone: " + elem[3][4:])
+            case "email":
+                print(role + " email: " + elem[3])
+                continue
+            case _:
+                print("ERROR: unrecognized vCard object " + elem[0])
                 continue
 
 
