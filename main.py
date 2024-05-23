@@ -187,61 +187,184 @@ def extract_info_from_vcard(vcard): #This extration is reducing the number of fi
     infos = {}
     for elem in vcard:
         match elem[0]:
-            case "version":
-                infos["version"] = elem[3]
+            case "source":
+                if elem[2] == "uri":
+                    infos["source"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a URI value")
+                    return
+
+            case "kind":
+                if elem[2] == "text":
+                    infos["kind"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT value")
+                    return
+            case "xml":
+                print("\"" + elem[0] + "\" is not implemented, as it is optional in RFC6350, but is detected.")
+                continue
             case "fn": # 6.2.1
                 infos["fn"] = elem[3]
             case "n": # 6.2.2
-                for i in range(0, 3):
-                    if elem[3][i] != "":
-                        match i:
-                            case 0:
-                                infos["n"]["familyNames"] = elem[3][i]
-                            case 1:
-                                infos["n"]["givenNames"] = elem[3][i]
-                            case 2:
-                                infos["n"]["additionalNames"] = elem[3][i]
-                            case 3:
-                                infos["n"]["honorificPrefixes"] = elem[3][i]
-                            case 4:
-                                infos["n"]["honorificSuffixes"] = elem[3][i]
-            case "nickname":  # TODO: need to understand more what is going on with the "text-list" and the "list-component 4(";" list-component)" of the "n" values
-                infos["nickname"] = {"type": elem[1], "nickname":elem[3]}
-            case "org":
-                if elem[1].get("type") is not None:
-                    infos["org"] = {"type": elem[3], "":""}
+                if elem[2] == "text":
+                    for i in range(0, 4):
+                        if elem[3][i] != "":
+                            match i:
+                                case 0:
+                                    infos["n"]["familyNames"] = elem[3][i]
+                                case 1:
+                                    infos["n"]["givenNames"] = elem[3][i]
+                                case 2:
+                                    infos["n"]["additionalNames"] = elem[3][i]
+                                case 3:
+                                    infos["n"]["honorificPrefixes"] = elem[3][i]
+                                case 4:
+                                    infos["n"]["honorificSuffixes"] = elem[3][i]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT value")
+                    return
+            case "nickname":
+                if elem[2] == "text":
+                    infos["nickname"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT value")
+                    return
+            case "photo":
+                if elem[2] == "uri":
+                    infos["photo"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a URI value")
+                    return
+            case "bday":
+                if elem[2] == "date-and-or-time" or elem[2] == "text":
+                    infos["bday"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a DATE-AND-OR-TIME value")
+                    return
+            case "anniversary":
+                if elem[2] == "date-and-or-time" or elem[2] == "text":
+                    infos["anniversary"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT or a DATE-AND-OR-TIME value")
+                    return
+            case "gender":
+                if elem[2] == "text":
+                    for i in range(0, 2):
+                        if elem[3][i] != "":
+                            match i:
+                                case 0:
+                                    if elem[3][i] in ["M", "F", "O", "N", "U"]:
+                                        infos["gender"]["sex"] = elem[3][i]
+                                    else:
+                                        print("ERROR: " + elem[0] + " sex is not recognized within the values defined in RFC6350 Section 6.2.7")
+                                        return
+                                case 1:
+                                    infos["gender"]["genderIdentity"] = elem[3][i]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT value")
+                    return
+
             case "adr":
-                for i in range(0, 7):
-                    if elem[3][i] != "":
-                        match i:  # I followed the indications of the RFC6350 for the ADR field : https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
-                            case 0:
-                                print(role + " PO box number: " + elem[3][i])
-                            case 1:
-                                print(role + " Apartment Number: " + elem[3][i])
-                            case 2:
-                                for line in elem[3][i]:  # we can have multiple lines for the same entry, should do it for all possible entries
-                                    print(role + " Street: " + line)
-                            case 3:
-                                print(role + " City: " + elem[3][i])
-                            case 4:
-                                print(role + " State/Province: " + elem[3][i])
-                            case 5:
-                                print(role + " Postal Code: " + elem[3][i])
-                            case 6:
-                                print(role + " Country: " + elem[3][i])
-                            case _:
-                                break
-            case "tel":
-                # This part is partially following the direction of the RFC6350 on the field TEL: https://datatracker.ietf.org/doc/html/rfc6350#section-6.4.1
-                # The type of the telephone is not supported here, but can be implemented
-                print(role + " Phone: " + elem[3][4:])
+                if elem[2] == "text":
+                    for i in range(0, 7):
+                        if elem[3][i] != "":
+                            match i:  # I followed the indications of the RFC6350 for the ADR field : https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
+                                case 0:
+                                    infos["adr"]["poBox"] = elem[3][i]
+                                case 1:
+                                    infos["adr"]["extendedAddress"] = elem[3][i]
+                                case 2:
+                                    infos["adr"]["street"] = elem[3][i]
+                                case 3:
+                                    infos["adr"]["locality"] = elem[3][i]
+                                case 4:
+                                    infos["adr"]["region"] = elem[3][i]
+                                case 5:
+                                    infos["adr"]["code"] = elem[3][i]
+                                case 6:
+                                    infos["adr"]["country"] = elem[3][i]
+                                case _:
+                                    print("ERROR: Too many values in " + elem[0] + ".")
+                                    return
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT value")
+                    return
+            case "tel": # RFC3966 TEL URI values
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
             case "email":
-                print(role + " email: " + elem[3])
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "impp":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "lang":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "tz":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "title":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "role":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "logo":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "org":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "member":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "related":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "categories":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "note":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "prodid":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "rev":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "sound":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "uid":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "clientpidmap":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "url":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "version":
+                infos["version"] = elem[3]
+            case "key":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "fburl":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "caladruri":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
+                continue
+            case "caluri":
+                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
                 continue
             case _:
                 print("ERROR: unrecognized vCard object " + elem[0])
                 continue
-
+    if not "kind" in infos:
+        infos["kind"] = "individual"
 
 def whois_nameservers(lookup): #prints the nameservers and the status of the dnssec
     for elem in lookup["nameservers"]:
