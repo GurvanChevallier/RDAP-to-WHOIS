@@ -182,7 +182,6 @@ def entity_print(role, entity):
             case _:
                 print("ERROR: unrecognized vCard object "+ elem[0])
                 continue
-def vcard_display
 
 def extract_info_from_vcard(vcard): #This extration is reducing the number of fields to only the ones that are expressed, saving potentially a lot of "" elements, in "n" or "adr" fields for an example.
     infos = {}
