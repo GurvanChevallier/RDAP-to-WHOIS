@@ -245,7 +245,7 @@ def extract_info_from_vcard(vcard): #This extration is reducing the number of fi
                 if elem[2] == "date-and-or-time" or elem[2] == "text":
                     infos["anniversary"] = elem[3]
                 else:
-                    print("ERROR: " + elem[0] + " is not a TEXT or a DATE-AND-OR-TIME value")
+                    print("ERROR: " + elem[0] + " is not a TEXT nor a DATE-AND-OR-TIME value")
                     return
             case "gender":
                 if elem[2] == "text":
@@ -290,18 +290,33 @@ def extract_info_from_vcard(vcard): #This extration is reducing the number of fi
                     print("ERROR: " + elem[0] + " is not a TEXT value")
                     return
             case "tel": # RFC3966 TEL URI values
-                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
-                continue
+                if elem[2] == "text" or elem[2] == "uri":
+                    infos["tel"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT nor a URI value")
+                    return
             case "email":
-                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
-                continue
+                if elem[2] == "text":
+                    infos["email"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a TEXT nor a URI value")
+                    return
             case "impp":
-                print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
-                continue
+                if elem[2] == "uri":
+                    infos["impp"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a URI value")
+                    return
             case "lang":
+                if elem[2] == "langage-tag":
+                    infos["lang"] = elem[3]
+                else:
+                    print("ERROR: " + elem[0] + " is not a language-tag value")
+                    return
+            case "tz":
                 print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
                 continue
-            case "tz":
+            case "geo":
                 print("\"" + elem[0] + "\" is not implemented yet, but is detected.")
                 continue
             case "title":
@@ -365,6 +380,8 @@ def extract_info_from_vcard(vcard): #This extration is reducing the number of fi
                 continue
     if not "kind" in infos:
         infos["kind"] = "individual"
+
+    return infos
 
 def whois_nameservers(lookup): #prints the nameservers and the status of the dnssec
     for elem in lookup["nameservers"]:
