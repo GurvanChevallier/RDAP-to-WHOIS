@@ -133,6 +133,7 @@ def whois_print_registrant(lookup):
                     continue
             entity_print(role,entity) # now get the information of the different roles registered
 
+# deprecated when the vcard_display is implemented using the extract_info_from_vcard dictonnary
 def entity_print(role, entity):
     if role is None:
         print("ERROR: no role assigned to entity trying to be printed")
@@ -161,7 +162,7 @@ def entity_print(role, entity):
                             case 1:
                                 print(role + " Apartment Number: " + elem[3][i])
                             case 2:
-                                for line in elem[3][i]: #we can have multiple lines for the same entry, should do it for all possible entries
+                                 #we can have multiple lines for the same entry, should do it for all possible entries
                                     print(role + " Street: " + line)
                             case 3:
                                 print(role + " City: " + elem[3][i])
@@ -183,6 +184,7 @@ def entity_print(role, entity):
             case _:
                 print("ERROR: unrecognized vCard object "+ elem[0])
                 continue
+
 
 def whois_nameservers(lookup): #prints the nameservers and the status of the dnssec
     for elem in lookup["nameservers"]:
