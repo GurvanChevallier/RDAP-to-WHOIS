@@ -1,6 +1,4 @@
 from pprint import pprint
-
-import vcard
 import requests
 import csv
 import tldextract
@@ -162,8 +160,8 @@ def entity_print(role, entity):
                             case 1:
                                 print(role + " Apartment Number: " + elem[3][i])
                             case 2:
-                                 #we can have multiple lines for the same entry, should do it for all possible entries
-                                    print(role + " Street: " + line)
+                                #we can have multiple lines for the same entry, should do it for all possible entries
+                                print(role + " Street: " + elem[3][i])
                             case 3:
                                 print(role + " City: " + elem[3][i])
                             case 4:

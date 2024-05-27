@@ -21,8 +21,8 @@ def sample_processing():
                 continue
 
             lookup_sample = json.loads(sample_json.get("val"))
-            pprint(lookup_sample)
-            print("\n\n")
+            #pprint(lookup_sample)
+            #print("\n\n")
             for entity in lookup_sample.get("entities"):
                 vcardArray = entity.get("vcardArray")
                 if vcardArray is None:
@@ -36,9 +36,9 @@ def sample_processing():
                         if infos.get("unrecognized"):
                             for elt in infos.get("unrecognized"):
                                 if elt not in unrecognized:
-                                    unrecognized[elt]= [infos]
+                                    unrecognized[elt]= 1
                                 else:
-                                    unrecognized[elt].append(infos)
+                                    unrecognized[elt] += 1
         print("vcards with unrecognized properties:\n")
         pprint(unrecognized)
         print("Error type count:\n")
