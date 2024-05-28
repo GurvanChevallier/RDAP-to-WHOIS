@@ -21,8 +21,8 @@ def display_whois_data(whois_data):
     if whois_data.get("expirationDate"):
         print("Registrar Registration Exipration Date : " + whois_data.get("expirationDate"))
     # TODO: REGISTRAR INFOS TO PRINT, ESPECIALLY THE ABUSE THINGY
-    if "registrar" in whois_data.get("entities"):
-        print("REGISTRAR EXISTS, NEED TO BE IMPLEMENTED SOON")
+    #pprint()
+    #print("REGISTRAR EXISTS, NEED TO BE IMPLEMENTED SOON")
     if whois_data.get("eppcodes"):
         for eppcode in whois_data.get("eppcodes"):
             print("Domain Status: "+ eppcode)
@@ -92,7 +92,7 @@ def display_whois_data(whois_data):
     return
 
 def get_rdap_data():
-    with open("/home/gurvanc/Documents/data/RDAP_sample.json", "r") as samplefile:
+    with open("RDAP_sample.json", "r") as samplefile:
         for i in range(0, int(nbsamples)):
             sample_json = json.loads(samplefile.readline())
             ## rejecting the cases where analysis of the RDAP response will be useless/impossible ##

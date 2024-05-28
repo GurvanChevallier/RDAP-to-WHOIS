@@ -4,7 +4,7 @@ import json
 from pprint import pprint
 
 def sample_processing():
-    with open("/home/gurvanc/Documents/data/RDAP_sample.json", "r") as samplefile:
+    with open("RDAP_sample.json", "r") as samplefile:
         errors = {}
         unrecognized = {}
         for i in range(0,int(nbsamples)):
