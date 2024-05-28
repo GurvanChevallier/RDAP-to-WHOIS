@@ -1,0 +1,8 @@
+module rdapmodel{
+     yang-version 1.1;
+     namespace "urn:rdap";
+     prefix "rdap";
+     organization "LIG";
+     contact "gurvan.chevallier@etu.univ-grenoble-alpes.fr"
+     description "This YANG module is a first try into this technology, in order to verify RDAP return in the future, to model them into "
+}
