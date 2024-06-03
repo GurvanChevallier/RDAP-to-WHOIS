@@ -94,26 +94,31 @@ def extract_info_from_vcard(vcard): #This extration is reducing the number of fi
                     infos["adr"] = {}
                     for i in range(0, 7):
                         if elem[3]:
-                            if elem[3][i] != "":
-                                match i:  # I followed the indications of the RFC6350 for the ADR field : https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
-                                    case 0:
-                                        infos["adr"]["poBox"] = elem[3][i]
-                                    case 1:
-                                        infos["adr"]["extendedAddress"] = elem[3][i]
-                                    case 2:
-                                        infos["adr"]["street"] = elem[3][i]
-                                    case 3:
-                                        infos["adr"]["locality"] = elem[3][i]
-                                    case 4:
-                                        infos["adr"]["region"] = elem[3][i]
-                                    case 5:
-                                        infos["adr"]["code"] = elem[3][i]
-                                    case 6:
-                                        infos["adr"]["country"] = elem[3][i]
-                                    case _:
-                                        print("ERROR: Too many values in " + elem[0] + ".")
-                                        infos["error"] = "too many fields in adr array"
-                                        return infos
+                            try:
+                                if elem[3][i] != "":
+                                    match i:  # I followed the indications of the RFC6350 for the ADR field : https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
+                                        case 0:
+                                            infos["adr"]["poBox"] = elem[3][i]
+                                        case 1:
+                                            infos["adr"]["extendedAddress"] = elem[3][i]
+                                        case 2:
+                                            infos["adr"]["street"] = elem[3][i]
+                                        case 3:
+                                            infos["adr"]["locality"] = elem[3][i]
+                                        case 4:
+                                            infos["adr"]["region"] = elem[3][i]
+                                        case 5:
+                                            infos["adr"]["code"] = elem[3][i]
+                                        case 6:
+                                            infos["adr"]["country"] = elem[3][i]
+                                        case _:
+                                            print("ERROR: Too many values in " + elem[0] + ".")
+                                            infos["error"] = "too many fields in adr array"
+                                            return infos
+                            except IndexError:
+                                print("ERROR: ADR is not implemented well according to the RFC 6350")
+                                infos["error"] = "ADR fields"
+                                return infos
                 else:
                     print("ERROR: " + elem[0] + " is not a TEXT value")
                     infos["error"] = "wrong value"
