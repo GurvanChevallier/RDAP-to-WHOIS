@@ -31,6 +31,8 @@ def display_whois_data(whois_data):
                                 print(role.capitalize() + ": " + entity.get(role).get("fn"))
                             case _:
                                 continue
+                        if entity.get(role).get("iana_id"):
+                            print(role.capitalize() + " IANA ID: "+ entity.get(role).get("iana_id"))
                     if role == "abuse":
                         match vcard_elem:
                             case "email":
@@ -167,6 +169,13 @@ def get_rdap_data(sample_json):
                         if entity.get("vcardArray"):
                             whois_data["entities"].append({role: vcard.extract_info_from_vcard(entity.get("vcardArray")[1])})
                         if role == "registrar":
+                            if entity.get("publicIds"):
+                                for publicid in entity.get("publicIds"):
+                                    if publicid.get("type") == "IANA Registrar ID":
+                                        for whois_role in whois_data['entities']:
+                                            if whois_role.get(role):
+                                                whois_role[role]["iana_id"] = publicid.get("identifier")
+                                                pprint(whois_role)
                             ## TODO: STILL HAVE TO RETRIEVE THE IANA ID AND ADD IT INTO THE WHOIS_DATA dict INSIDE OF THE "registrar" object in entities[]
                             if entity.get("entities"):
                                 for registrar_entity in entity.get("entities"):
