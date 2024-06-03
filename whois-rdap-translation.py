@@ -1,13 +1,16 @@
 from pprint import pprint
-
+from tqdm import tqdm
 import vcard
 import csv
 import tldextract
 import json
-nbsamples = 10000
+
+nbsamples = 2259636
+
 
 def display_whois_data(whois_data):
     unrecognized = {}
+    errors = {}
     if whois_data.get("domain_name"):
         print("Domain Name: " + whois_data.get("domain_name"))
     if whois_data.get("registry_domain_id"):
@@ -20,7 +23,7 @@ def display_whois_data(whois_data):
         print("Creation Date : " + whois_data.get("creationDate"))
     if whois_data.get("expirationDate"):
         print("Registrar Registration Exipration Date : " + whois_data.get("expirationDate"))
-    #pprint()
+    # pprint()
     if whois_data.get("entities"):
         for entity in whois_data.get("entities"):
             for role in entity:
@@ -32,7 +35,7 @@ def display_whois_data(whois_data):
                             case _:
                                 continue
                         if entity.get(role).get("iana_id"):
-                            print(role.capitalize() + " IANA ID: "+ entity.get(role).get("iana_id"))
+                            print(role.capitalize() + " IANA ID: " + entity.get(role).get("iana_id"))
                     if role == "abuse":
                         match vcard_elem:
                             case "email":
@@ -40,12 +43,12 @@ def display_whois_data(whois_data):
                             case "tel":
                                 print("Registrar Abuse Contact Phone: " + entity.get(role).get("tel")[4:])
                             case _:
-                                continue
+                                pass
     if whois_data.get("eppcodes"):
         for eppcode in whois_data.get("eppcodes"):
-            print("Domain Status: "+ eppcode)
+            print("Domain Status: " + eppcode)
 
-     #different registrant/admin/tech infos
+    # different registrant/admin/tech infos
     if whois_data.get("entities"):
         for entity in whois_data.get("entities"):
             if entity.get("registrar") or entity.get("abuse"):
@@ -57,17 +60,20 @@ def display_whois_data(whois_data):
                             print(role.capitalize() + " Name: " + entity.get(role).get("fn"))
                             continue
                         case "org":
-                            print (role.capitalize() + " Organization: " + entity.get(role).get("org"))
+                            print(role.capitalize() + " Organization: " + entity.get(role).get("org"))
                             continue
 
                         case "adr":
                             for adr_elem in entity.get(role).get("adr"):
                                 match adr_elem:
                                     case "PoBox":
-                                        print(role.capitalize() + " PO Box: " + entity.get(role).get("adr").get(adr_elem))
+                                        print(
+                                            role.capitalize() + " PO Box: " + entity.get(role).get("adr").get(adr_elem))
                                         continue
                                     case "extendedAddress":
-                                        print(role.capitalize() + " Extended Address: " + entity.get(role).get("adr").get(adr_elem))
+                                        print(
+                                            role.capitalize() + " Extended Address: " + entity.get(role).get("adr").get(
+                                                adr_elem))
                                         continue
                                     case "street":
                                         for street in entity.get(role).get("adr").get(adr_elem):
@@ -78,13 +84,16 @@ def display_whois_data(whois_data):
                                         print(role.capitalize() + " City: " + entity.get(role).get("adr").get(adr_elem))
                                         continue
                                     case "region":
-                                        print(role.capitalize() + " State/Province: " + entity.get(role).get("adr").get(adr_elem))
+                                        print(role.capitalize() + " State/Province: " + entity.get(role).get("adr").get(
+                                            adr_elem))
                                         continue
                                     case "code":
-                                        print(role.capitalize() + " Postal Code: " + entity.get(role).get("adr").get(adr_elem))
+                                        print(role.capitalize() + " Postal Code: " + entity.get(role).get("adr").get(
+                                            adr_elem))
                                         continue
                                     case "country":
-                                        print(role.capitalize() + " Country: " + entity.get(role).get("adr").get(adr_elem))
+                                        print(role.capitalize() + " Country: " + entity.get(role).get("adr").get(
+                                            adr_elem))
                                         continue
                                     case _:
                                         continue
@@ -102,18 +111,26 @@ def display_whois_data(whois_data):
                                         unrecognized[elem_unrecognized] = 1
                                     else:
                                         unrecognized[elem_unrecognized] += 1
-                                pass #maybe try to show something after the whois translation displayed
+                                pass  # maybe try to show something after the whois translation displayed
+                        case "errors":
+                            if entity.get(role).get("errors"):
+                                for elem_error in entity.get(role).get("errors"):
+                                    if elem_error not in errors:
+                                        errors[elem_error] = 1
+                                    else:
+                                        errors[elem_error] += 1
                         case _:
                             continue
 
     if whois_data.get("nameservers"):
         for ns in whois_data.get("nameservers"):
-            print("Name Server: "+ ns)
+            print("Name Server: " + ns)
     if whois_data.get("secure_dns"):
         print("Secure DNS: " + whois_data.get("secure_dns"))
 
     print("\n\n")
-    return unrecognized
+    return unrecognized, errors
+
 
 def get_rdap_data(sample_json):
     ## rejecting the cases where analysis of the RDAP response will be useless/impossible ##
@@ -129,7 +146,7 @@ def get_rdap_data(sample_json):
 
     lookup_sample = json.loads(sample_json.get("val"))
     print("FROM RDAP:\n\n")
-    pprint(lookup_sample)
+    #pprint(lookup_sample)
     print("\n\n TO WHOIS: \n\n")
     whois_data = {}
     for elem in lookup_sample:
@@ -137,6 +154,7 @@ def get_rdap_data(sample_json):
             case "handle":
                 whois_data["registry_domain_id"] = lookup_sample.get(elem)
             case "ldhName":
+                print(lookup_sample.get(elem))
                 whois_data["domain_name"] = lookup_sample.get(elem)
             case "links":
                 for link in lookup_sample.get("links"):
@@ -167,7 +185,8 @@ def get_rdap_data(sample_json):
                     for role in roles:
                         #pprint(entity)
                         if entity.get("vcardArray"):
-                            whois_data["entities"].append({role: vcard.extract_info_from_vcard(entity.get("vcardArray")[1])})
+                            whois_data["entities"].append(
+                                {role: vcard.extract_info_from_vcard(entity.get("vcardArray")[1])})
                         if role == "registrar":
                             if entity.get("publicIds"):
                                 for publicid in entity.get("publicIds"):
@@ -175,8 +194,6 @@ def get_rdap_data(sample_json):
                                         for whois_role in whois_data['entities']:
                                             if whois_role.get(role):
                                                 whois_role[role]["iana_id"] = publicid.get("identifier")
-                                                pprint(whois_role)
-                            ## TODO: STILL HAVE TO RETRIEVE THE IANA ID AND ADD IT INTO THE WHOIS_DATA dict INSIDE OF THE "registrar" object in entities[]
                             if entity.get("entities"):
                                 for registrar_entity in entity.get("entities"):
                                     if "abuse" in registrar_entity.get("roles"):
@@ -205,24 +222,35 @@ def get_rdap_data(sample_json):
                 continue
             case _:
                 continue
-    #print("\n\nWHOISDATA:\n")
-    #pprint(whois_data)
-    #print("\n")
+    # print("\n\nWHOISDATA:\n")
+    # pprint(whois_data)
+    # print("\n")
     return whois_data
+
 
 with open("RDAP_sample.json", "r") as samplefile:
     unrecognized_vcards = {}
-    for i in range(0, nbsamples):
-        content = samplefile.readline()
-        retrieved_data = get_rdap_data(json.loads(content))
+    error_dict = {}
+    for content in tqdm(samplefile, total=2259637):
+        try:
+            retrieved_data = get_rdap_data(json.loads(content))
+        except:
+            retrieved_data = None
+            continue
         if retrieved_data:
-            unrec = display_whois_data(retrieved_data)
-            for elem_unrecognized_rn in unrec:
-                    if elem_unrecognized_rn not in unrecognized_vcards:
-                        unrecognized_vcards[elem_unrecognized_rn] = 1
-                    else:
-                        unrecognized_vcards[elem_unrecognized_rn] += 1
+            unrec_list, errors_list = display_whois_data(retrieved_data)
+            for elem_unrecognized_rn in unrec_list:
+                if elem_unrecognized_rn not in unrecognized_vcards:
+                    unrecognized_vcards[elem_unrecognized_rn] = 1
+                else:
+                    unrecognized_vcards[elem_unrecognized_rn] += 1
+            for elem_error in errors_list:
+                if elem_error not in error_dict:
+                    error_dict[elem_error] = 1
+                else:
+                    error_dict[elem_error] += 1
 
-    print("For "+ str(nbsamples) + " samples tested, unrecognized properties in vCards:")
+    print("For " + str(nbsamples) + " samples tested, unrecognized properties in vCards:")
     print(unrecognized_vcards)
-
+    print("\n\nFor " + str(nbsamples) + " samples tested, errors in vCards:")
+    print(error_dict)
