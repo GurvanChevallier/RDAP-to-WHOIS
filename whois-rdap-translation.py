@@ -4,8 +4,11 @@ import vcard
 import csv
 import tldextract
 import json
+import os
+import sys
 
-nbsamples = 2259636
+f = open(os.devnull, "w")
+sys.stdout = f
 
 
 def display_whois_data(whois_data):
@@ -143,7 +146,6 @@ def get_rdap_data(sample_json):
     if sample_json.get("val") == "Cannot read the body":
         print("INFO: Sample with RDAP response body not readable, skipping")
         return
-
     lookup_sample = json.loads(sample_json.get("val"))
     print("FROM RDAP:\n\n")
     #pprint(lookup_sample)
@@ -231,6 +233,7 @@ def get_rdap_data(sample_json):
 with open("RDAP_sample.json", "r") as samplefile:
     unrecognized_vcards = {}
     error_dict = {}
+    nbsamples = 0
     for content in tqdm(samplefile, total=2259637):
         try:
             retrieved_data = get_rdap_data(json.loads(content))
@@ -238,6 +241,7 @@ with open("RDAP_sample.json", "r") as samplefile:
             retrieved_data = None
             continue
         if retrieved_data:
+            nbsamples+=1
             unrec_list, errors_list = display_whois_data(retrieved_data)
             for elem_unrecognized_rn in unrec_list:
                 if elem_unrecognized_rn not in unrecognized_vcards:
@@ -249,8 +253,9 @@ with open("RDAP_sample.json", "r") as samplefile:
                     error_dict[elem_error] = 1
                 else:
                     error_dict[elem_error] += 1
-
-    print("For " + str(nbsamples) + " samples tested, unrecognized properties in vCards:")
-    print(unrecognized_vcards)
-    print("\n\nFor " + str(nbsamples) + " samples tested, errors in vCards:")
-    print(error_dict)
+    outputfp = open('output.txt', 'a')
+    print("For " + str(nbsamples) + " samples tested, unrecognized properties in vCards:", file=outputfp)
+    print(unrecognized_vcards, file=outputfp)
+    print("\n\nFor " + str(nbsamples) + " samples tested, errors in vCards:", file=outputfp)
+    print(error_dict, file=outputfp)
+    outputfp.close()

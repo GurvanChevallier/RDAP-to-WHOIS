@@ -316,7 +316,7 @@ def extract_info_from_vcard(
         except Exception as e:
             with open('error.txt', "a") as errorfp:
                 errorfp.write(repr(e) + ': ')
-                pprint(vcard, stream=errorfp)
+                print(str(vcard), file=errorfp)
 
                 continue
     if not "kind" in infos:
