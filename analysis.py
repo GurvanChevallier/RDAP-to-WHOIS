@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 errorstypes = {}
-with open("error2.txt", "r") as fp:
+with open("error_save.txt", "r") as fp:
     for content in tqdm(fp, total=15008):
         if content.split(": ", 1)[0] not in errorstypes:
             errorstypes[content.split(": ", 1)[0]] = {errorstypes[content.split(": ", 1)[1]]:1}

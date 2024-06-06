@@ -14,18 +14,31 @@ sys.stdout = f
 def display_whois_data(whois_data):
     unrecognized = {}
     errors = {}
+    printed = {}
     if whois_data.get("domain_name"):
         print("Domain Name: " + whois_data.get("domain_name"))
+        if "domain_name" not in printed:
+            printed["domain_name"] = 1
     if whois_data.get("registry_domain_id"):
         print("Registry Domain ID: " + whois_data.get("registry_domain_id"))
+        if "registry_domain_id" not in printed:
+            printed["registry_domain_id"] = 1
     if whois_data.get("registrar_rdap_server"):
         print("Registrant RDAP Server: " + whois_data.get("registrar_rdap_server"))
+        if "registrar_rdap_server" not in printed:
+            printed["registrar_rdap_server"] = 1
     if whois_data.get("lastChangedDate"):
         print("Updated Date : " + whois_data.get("lastChangedDate"))
+        if "updatedDate" not in printed:
+            printed["updatedDate"] = 1
     if whois_data.get("creationDate"):
         print("Creation Date : " + whois_data.get("creationDate"))
+        if "creationDate" not in printed:
+            printed["creationDate"] = 1
     if whois_data.get("expirationDate"):
         print("Registrar Registration Exipration Date : " + whois_data.get("expirationDate"))
+        if "expirationDate" not in printed:
+            printed["expirationDate"] = 1
     # pprint()
     if whois_data.get("entities"):
         for entity in whois_data.get("entities"):
@@ -39,6 +52,10 @@ def display_whois_data(whois_data):
                                 continue
                         if entity.get(role).get("iana_id"):
                             print(role.capitalize() + " IANA ID: " + entity.get(role).get("iana_id"))
+                            if "iana_id" not in printed:
+                                printed["iana_id"] = 1
+                        if "registrar" not in printed:
+                            printed["registrar"] = 1
                     if role == "abuse":
                         match vcard_elem:
                             case "email":
@@ -47,9 +64,14 @@ def display_whois_data(whois_data):
                                 print("Registrar Abuse Contact Phone: " + entity.get(role).get("tel")[4:])
                             case _:
                                 pass
+                        if "abuse" not in printed:
+                            printed["abuse"] = 1
+
     if whois_data.get("eppcodes"):
         for eppcode in whois_data.get("eppcodes"):
             print("Domain Status: " + eppcode)
+        if "eppcodes" not in printed:
+            printed["eppcodes"] = 1
 
     # different registrant/admin/tech infos
     if whois_data.get("entities"):
@@ -57,6 +79,9 @@ def display_whois_data(whois_data):
             if entity.get("registrar") or entity.get("abuse"):
                 continue
             for role in entity:
+
+                if role not in printed:
+                    printed[role] = 1
                 for vcard_elem in entity.get(role):
                     match vcard_elem:
                         case "fn":
@@ -128,24 +153,27 @@ def display_whois_data(whois_data):
     if whois_data.get("nameservers"):
         for ns in whois_data.get("nameservers"):
             print("Name Server: " + ns)
+            if "nameservers" not in printed:
+                printed["nameservers"] = 1
     if whois_data.get("secure_dns"):
         print("Secure DNS: " + whois_data.get("secure_dns"))
-
+        if "secure_dns" not in printed:
+            printed["secure_dns"] = 1
     print("\n\n")
-    return unrecognized, errors
+    return unrecognized, errors, printed
 
 
 def get_rdap_data(sample_json):
     ## rejecting the cases where analysis of the RDAP response will be useless/impossible ##
     if sample_json.get("mode") != "rdap":
         print("INFO: Sample with a mode not fitting (!=rdap), skipping")
-        return
+        return "not_rdap",{}
     if sample_json.get("status_code")[0] != "200":
         print("INFO: Sample with a status code not fitting (!=200), skipping")
-        return
+        return "not_OK", {}
     if sample_json.get("val") == "Cannot read the body":
         print("INFO: Sample with RDAP response body not readable, skipping")
-        return
+        return "response_unreadable", {}
     lookup_sample = json.loads(sample_json.get("val"))
     print("FROM RDAP:\n\n")
     #pprint(lookup_sample)
@@ -233,16 +261,24 @@ def get_rdap_data(sample_json):
 with open("RDAP_sample.json", "r") as samplefile:
     unrecognized_vcards = {}
     error_dict = {}
+    printed_dict = {}
+    rejection_dict= {}
     nbsamples = 0
     for content in tqdm(samplefile, total=2259637):
         try:
-            retrieved_data = get_rdap_data(json.loads(content))
+            rejection_reason,retrieved_data = get_rdap_data(json.loads(content))
         except:
             retrieved_data = None
             continue
+        if rejection_reason:
+            if rejection_reason in rejection_dict:
+                rejection_dict[rejection_reason] += 1
+            else:
+                rejection_dict[rejection_reason] = 1
+            continue
         if retrieved_data:
             nbsamples+=1
-            unrec_list, errors_list = display_whois_data(retrieved_data)
+            unrec_list, errors_list, printed_list = display_whois_data(retrieved_data)
             for elem_unrecognized_rn in unrec_list:
                 if elem_unrecognized_rn not in unrecognized_vcards:
                     unrecognized_vcards[elem_unrecognized_rn] = 1
@@ -253,9 +289,17 @@ with open("RDAP_sample.json", "r") as samplefile:
                     error_dict[elem_error] = 1
                 else:
                     error_dict[elem_error] += 1
+            for printed_elem in printed_list:
+                if printed_elem not in printed_dict:
+                    printed_dict[printed_elem] = printed_list[printed_elem]
+                else:
+                    printed_dict[printed_elem] += printed_list[printed_elem]
+
     outputfp = open('output.txt', 'a')
     print("For " + str(nbsamples) + " samples tested, unrecognized properties in vCards:", file=outputfp)
     print(unrecognized_vcards, file=outputfp)
     print("\n\nFor " + str(nbsamples) + " samples tested, errors in vCards:", file=outputfp)
     print(error_dict, file=outputfp)
+    print("\n\nFor " + str(nbsamples) + " samples tested, fields printed in WHOIS-to-RDAP translation:", file=outputfp)
+    print(printed_dict, file=outputfp)
     outputfp.close()
