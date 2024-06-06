@@ -255,7 +255,7 @@ def get_rdap_data(sample_json):
     # print("\n\nWHOISDATA:\n")
     # pprint(whois_data)
     # print("\n")
-    return whois_data
+    return "", whois_data
 
 
 with open("RDAP_sample.json", "r") as samplefile:
@@ -296,10 +296,13 @@ with open("RDAP_sample.json", "r") as samplefile:
                     printed_dict[printed_elem] += printed_list[printed_elem]
 
     outputfp = open('output.txt', 'a')
+    print("\n\nFor " + str(nbsamples) + " samples tested, rejected reasons of lines in RDAP_sample.json file:",file=outputfp)
+    print(rejection_dict, file=outputfp)
     print("For " + str(nbsamples) + " samples tested, unrecognized properties in vCards:", file=outputfp)
     print(unrecognized_vcards, file=outputfp)
     print("\n\nFor " + str(nbsamples) + " samples tested, errors in vCards:", file=outputfp)
     print(error_dict, file=outputfp)
     print("\n\nFor " + str(nbsamples) + " samples tested, fields printed in WHOIS-to-RDAP translation:", file=outputfp)
     print(printed_dict, file=outputfp)
+
     outputfp.close()
