@@ -13,6 +13,17 @@ with open("error_save.txt", "r") as fp:
 
 errorstypes = dict(sorted(errorstypes.items(), key=lambda item: item[1], reverse=True))
 print(errorstypes)
+
+fields = {}
+with open("errorskeyerror.txt", "r") as fp:
+    for content in tqdm(fp, total=1005):
+        if content.split(": ", 1)[1] not in fields:
+            fields[content.split(": ", 1)[1]] = 1
+        else:
+           fields[content.split(": ", 1)[1]] += 1
+
+print(fields)
+"""
 def my_fmt(x):
     print(x)
     return '{:.1f}%\n{:.0f}'.format(x, total*x/100)
@@ -23,7 +34,7 @@ plt.pie(errorstypes.values(), labels=errorstypes.keys(), autopct=my_fmt, startan
 # Equal aspect ratio ensures that pie is drawn as a circle.
 plt.axis('equal')
 
-plt.show()
+plt.show()"""
 
 """
 plt.xticks(range(len(errorstypes)), list(errorstypes.keys()), rotation=25)
@@ -65,3 +76,4 @@ for p in graph:
 
 plt.show()
 """
+
